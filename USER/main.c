@@ -119,6 +119,33 @@ float Get_Temp_10NTC(float res)
 	return temp;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
  int main(void)
  {
 	NVIC_Configuration();
