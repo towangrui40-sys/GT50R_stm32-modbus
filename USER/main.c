@@ -36,9 +36,7 @@
 #define SAMPLE_TIME  0.1f
 
 SysDataDef sys;
-volatile uint16_t g_compressor_target_rpm = 0; //PID计算得到的目标转速，未经过转速容错和范围限制处理
 volatile uint16_t g_compressor_pid_freq = 0;  //PID计算得到的频率，未经过频率容错和范围限制处理
-extern int modbus_flag;
 //====================  ====================
 void Init_Rtu_RegHoldingBuf(SysDataDef* dat)
 {
@@ -89,9 +87,9 @@ OS_STK LED_TASK_STK[LED_STK_SIZE];
 //OS_TMR   * tmr_spk;
 
 void start_task(void *pdata);
-void com_interface_task(void *pdata);
+void input_task(void *pdata);
 void hmi_interface_task(void *pdata);
-void monitor_task(void *pdata);
+void output_task(void *pdata);
 void control_task(void *pdata);
 void led_task(void *pdata);	
 void TIM3_Configuration(uint32_t freq);
@@ -118,34 +116,6 @@ float Get_Temp_10NTC(float res)
 	temp-=Ka_10K;
 	return temp;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
  int main(void)
  {
 	NVIC_Configuration();
@@ -154,6 +124,7 @@ float Get_Temp_10NTC(float res)
 	GPIO_Config();
 	ADC1_Init();
 	DAC1_Init();
+	
 	OSInit();   
  	OSTaskCreate(start_task,(void *)0,(OS_STK *)&START_TASK_STK[START_STK_SIZE-1],START_TASK_PRIO );
 	OSStart();
@@ -168,8 +139,8 @@ void start_task(void *pdata)
 	OS_ENTER_CRITICAL();
 	
  	OSTaskCreate(hmi_interface_task,(void *)0,(OS_STK*)&HMI_INTERFACE_TASK_STK[HMI_INTERFACE_STK_SIZE-1],HMI_INTERFACE_TASK_PRIO);
- 	OSTaskCreate(com_interface_task,(void *)0,(OS_STK*)&COM_INTERFACE_TASK_STK[COM_INTERFACE_STK_SIZE-1],COM_INTERFACE_TASK_PRIO);
-	OSTaskCreate(monitor_task,(void *)0,(OS_STK*)&MONITOR_TASK_STK[MONITOR_STK_SIZE-1],MONITOR_TASK_PRIO);
+ 	OSTaskCreate(input_task,(void *)0,(OS_STK*)&COM_INTERFACE_TASK_STK[COM_INTERFACE_STK_SIZE-1],COM_INTERFACE_TASK_PRIO);
+	OSTaskCreate(output_task,(void *)0,(OS_STK*)&MONITOR_TASK_STK[MONITOR_STK_SIZE-1],MONITOR_TASK_PRIO);
 	OSTaskCreate(control_task,(void *)0,(OS_STK*)&CONTROL_TASK_STK[CONTROL_STK_SIZE-1],CONTROL_TASK_PRIO);
 	OSTaskCreate(led_task,(void *)0,(OS_STK*)&LED_TASK_STK[LED_STK_SIZE-1],LED_TASK_PRIO);
 	OSTaskSuspend(START_TASK_PRIO);
@@ -189,27 +160,13 @@ void hmi_interface_task(void *pdata)
 	}
 }
 
-void com_interface_task(void *pdata)
-{
-	delay_ms(100);
-//	uart2_init(115200);
-	delay_ms(100);
-	while(1)
-	{
-		delay_ms(1000);
-	}
-}
-
-void monitor_task(void *pdata)
+void input_task(void *pdata)
 {
 	static float adc_ch1=0;
-	static short vol_temp=0;
 	float temp=0;
-	DAC1_Set_Vol((u16)temp);
-	delay_ms(1000);
+	delay_ms(100);
 	while(1)
 	{
-		//get temprature
 		adc_ch1	= Get_Adc(0,adc_ch1,0.5f); 
 		temp = (float)adc_ch1/4096.0f;
 		temp = 1/temp-1;
@@ -220,7 +177,18 @@ void monitor_task(void *pdata)
 			else sys.door = 0;
 		if(LOCK == 0)sys.lock = 1;
 			else sys.lock = 0;
-		
+		delay_ms(100);
+	}
+}
+
+void output_task(void *pdata)
+{
+	static short vol_temp=0;
+	float temp=0;
+	DAC1_Set_Vol((u16)temp);
+	delay_ms(1000);
+	while(1)
+	{
 		//dc out
 		if(sys.set_lock == 1) DC_CTRL_EX(ON);
 		else DC_CTRL_EX(OFF);	
@@ -228,7 +196,7 @@ void monitor_task(void *pdata)
 		else DC_CTRL2(OFF);
 		if(sys.set_dc3 == 1) DC_CTRL3(ON);
 		else DC_CTRL3(OFF);
-		//ac out
+		//ac out		//get temprature
 		if(sys.set_ac1 == 1) AC_CTRL1(ON);
 		else AC_CTRL1(OFF);
 		if(sys.set_ac2 == 1) AC_CTRL2(ON);
