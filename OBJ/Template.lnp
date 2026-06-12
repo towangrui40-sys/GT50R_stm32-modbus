@@ -35,6 +35,7 @@
 "..\obj\os_dbg.o"
 "..\obj\os_cpu_a.o"
 "..\obj\lis302dl.o"
+"..\obj\temp_ctrl.o"
 "..\obj\mbascii.o"
 "..\obj\mbfunccoils.o"
 "..\obj\mbfuncdiag.o"

@@ -66,14 +66,15 @@ enum RTU_MOTOR_ADDR
 {
 /////////////motor work parameters////////
 	ADDR_MOTOR_GET_FWD=0,
-	ADDR_MOTOR_SET_RUN,
 	ADDR_MOTOR_SET_VOL,	
-	
-  ADDR_SET_TEMP,
+	ADDR_SET_TEMP_CMD,
+  	ADDR_SET_TEMP,
 	ADDR_NTC_TEMP,
+	ADDR_DISP_FREQ,
 ///////////////////////////////////////	
 	ADDR_DOOR,
 	ADDR_LOCK,
+	
 	ADDR_SET_LOCK,
 	ADDR_SET_DC2,
 	ADDR_SET_DC3,

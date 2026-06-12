@@ -48,3 +48,4 @@
 ..\obj\main.o: ..\modbus_m\port\user_mb_app.h
 ..\obj\main.o: ..\modbus\include\mbframe.h
 ..\obj\main.o: ..\modbus\include\mbutils.h
+..\obj\main.o: ..\HARDWARE\Temp_ctrl.h
